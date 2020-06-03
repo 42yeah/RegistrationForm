@@ -1,6 +1,6 @@
 <?php
 
-function verify_validity($post, &$reason) {
+function insert($post, &$reason) {
     $username = $post["username"];
     $password = $post["password"];
     $verified = $password == $post["password_verification"];
@@ -50,11 +50,36 @@ function verify_validity($post, &$reason) {
 
     $valid &= strlen($introduction) >= 10;
     if (!$valid) { $reason = "个人介绍至少需要 10 个字符"; return false; }
+
+    $link = mysqli_connect("127.0.0.1", "root", "feck", "playground");
+    mysqli_set_charset($link, "UTF-8");
+    
+    function query($link, $cmd) {
+        $result = mysqli_query($link, $cmd);
+        if (!$result) {
+            $reason = mysqli_error($link);
+            $validity = false;
+        }
+        return $result;
+    }
+
+    $valid &= mysqli_num_rows(query($link, "SELECT * FROM user WHERE username='" . $username . "'")) == 0;
+    if (!$valid) { $reason = "用户名已经存在"; return false; }
+
+    $ageStr = $age == null ? "NULL" : strval($age);
+    $genderStr = $gender == "male" ? "0" : "1";
+    $mailStr = $email == null ? "NULL" : "'" . $email . "'";
+    $hobbiesStr = $hobbies == null ? "NULL" : "'" . json_encode($hobbies) . "'";
+
+    query($link, "INSERT INTO user (username, password, age, gender, edu_level, email, hobbies, introduction) 
+        VALUES('" . $username . "', '" . $password . "', " . $ageStr . ", " . $genderStr . ",
+        '" . $education_level . "', " . $mailStr . ", " . $hobbiesStr . ", '" . $introduction . "')");
+    
     return $valid;
 }
 
 $reason = "";
-$validity = verify_validity($_POST, $reason);
+$validity = insert($_POST, $reason);
 
 ?>
 
@@ -82,8 +107,8 @@ $validity = verify_validity($_POST, $reason);
         }
 
         .center {
-            width: 100vw;
-            height: 100vh;
+            min-width: 100vw;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;

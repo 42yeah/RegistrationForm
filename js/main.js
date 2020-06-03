@@ -1,6 +1,7 @@
 function checkPassword() {
     let passwordField = document.querySelector("#password");
     let verificationField = document.querySelector("#password_verification");
+    if (!verificationField) { return true; }
     if (passwordField.value != "" &&
         passwordField.value == verificationField.value) {
         verificationField.parentElement.classList.add("done");
